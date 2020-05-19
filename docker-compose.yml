@@ -1,0 +1,45 @@
+version: '3.4'
+
+services:
+  ejabberd:
+    image: ejabberd/ecs:20.04
+    depends_on:
+      - mysql
+    restart: always
+    volumes:
+      - ./conf:/home/ejabberd/conf:rw
+      - ./database:/home/ejabberd/database:rw
+      - ./logs:/home/ejabberd/logs:rw
+      - ./upload:/home/ejabberd/upload:rw
+    ports:
+      # Client 2 Server:
+      - 5222:5222
+      # Server 2 Server:
+      - 5269:5269
+      # HTTP (admin):
+      - 5280:5280
+      # HTTP (admin, api, bosh, captcha, upload, ws, oauth):
+      - 5443:5443
+    networks:
+      - network
+
+  mysql:
+    build:
+      context: ./mysql
+    restart: always
+    env_file: ./.env
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - ./mysql-data:/var/lib/mysql:rw
+    networks:
+      - network
+    ports:
+      - "3306:3306"
+
+networks:
+  network: {}
+
